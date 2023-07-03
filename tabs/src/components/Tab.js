@@ -243,15 +243,24 @@ class Tab extends React.Component {
   }
 
   handleClick = async () => {
-    console.log('clicked');
-    // await this.callFunctionWithErrorHandling("todo", "post", {
-    //     description: "test",
-    //     isCompleted: false,
-    //     channelOrChatId: this.channelOrChatId,
-    // });
+    //get messages from the channel
+    let result;
+    result = await this.callFunctionWithErrorHandling("getuserprofile", "post", {});
+    console.log(result);
+
+    //get the Q&A pairs
+    result = await this.callFunctionWithErrorHandling("getqapairs", "post", {});
+
+    //put the Q&A pairs into a db
+    
+
+    await this.callFunctionWithErrorHandling("todo", "post", {
+      description: result[0].substring(0, 10),
+      isCompleted: false,
+      channelOrChatId: this.channelOrChatId
+    });
     this.refresh();
 }
-
 
   async refresh() {
     await this.getItems();
