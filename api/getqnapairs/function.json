@@ -8,18 +8,12 @@
       "methods": [
         "get",
         "post"
-      ],
-      "route": "getuserprofile"
+      ]
     },
     {
       "type": "http",
       "direction": "out",
-      "name": "$return"
-    },
-    {
-      "direction": "in",
-      "name": "teamsfxContext",
-      "type": "TeamsFx"
+      "name": "res"
     }
   ]
 }

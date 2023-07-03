@@ -27,6 +27,14 @@
                 {
                     "id": "User.ReadBasic.All",
                     "type": "Scope"
+                },
+                {
+                    "id": "ChannelMessage.Read.All",
+                    "type": "Scope"
+                },
+                {
+                    "id": "ChannelMessage.Send",
+                    "type": "Scope"
                 }
             ]
         }
