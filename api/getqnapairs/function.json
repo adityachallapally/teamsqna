@@ -8,12 +8,13 @@
       "methods": [
         "get",
         "post"
-      ]
+      ],
+      "route": "getqnapairs"
     },
     {
       "type": "http",
       "direction": "out",
-      "name": "res"
+      "name": "$return"
     }
   ]
 }

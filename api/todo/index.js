@@ -40,6 +40,7 @@ module.exports = async function (context, req, config) {
     try {
         const method = req.method.toLowerCase();
         const accessToken = config.AccessToken;
+
           
         const oboCredential = new OnBehalfOfUserCredential(accessToken, oboAuthConfig);
         // Get the user info from access token

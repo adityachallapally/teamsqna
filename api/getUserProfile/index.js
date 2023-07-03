@@ -101,7 +101,7 @@ module.exports = async function (context, req, config) {
                 let body = message.body.content.replace(/<\/?div>/g, "");
                 replies = body + replies + ",";
             }
-            let body_and_replies = replies + body;
+            let body_and_replies = body+replies;
             resultArray.push(body_and_replies);
         }
 

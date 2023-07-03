@@ -28,6 +28,13 @@ import noItemimage from "../images/no-item.png";
 import { app } from "@microsoft/teams-js";
 import config from "./lib/config";
 
+import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
+
+// Now you can use OpenAIClient and AzureKeyCredential in your code
+
+//const { OpenAIClient, AzureKeyCredential } = require("@azure/openai");
+
+
 class Tab extends React.Component {
   constructor(props) {
     super(props);
@@ -243,24 +250,127 @@ class Tab extends React.Component {
   }
 
   handleClick = async () => {
-    //get messages from the channel
-    let result;
-    result = await this.callFunctionWithErrorHandling("getuserprofile", "post", {});
-    console.log(result);
+    //get messages from the channel from the user profile
+    //get messages from the channel from the user profile
+    let result = await this.callFunctionWithErrorHandling("getuserprofile", "post", {});
+    console.log(result.join("."));
 
     //get the Q&A pairs
-    result = await this.callFunctionWithErrorHandling("getqapairs", "post", {});
+    const extractedPairs = await this.qnaextraction();
+    /*
+    const data = {
+      "0": {
+        "Q": "What is the weather today?",
+        "A": "It's warm."
+      },
+      "1": {
+        "Q": "What did you add at the top of this channel?",
+        "A": "I added a tab at the top of this channel. Check it out!"
+      }
+    };
+    
+    const extractedPairs = Object.keys(data).map((key) => data[key]);
+    */
+    console.log(extractedPairs);
+
+    for (const pair of extractedPairs) {
+      const requestBodyQ = {
+        description: pair.Q,
+        isCompleted: false,
+        channelOrChatId: this.channelOrChatId,
+      };
+
+      await this.callFunctionWithErrorHandling("todo", "post", requestBodyQ);
+      console.log(pair.Q);
+
+      const requestBodyA = {
+        description: pair.A,
+        isCompleted: false,
+        channelOrChatId: this.channelOrChatId,
+      };
+
+      await this.callFunctionWithErrorHandling("todo", "post", requestBodyA);
+      console.log(pair.A);
+
+      console.log("-------------------------");
+    }
+
+    this.refresh();
+
+    // let qnapairs = await this.callFunctionWithErrorHandling("getqnapairs", "post", {
+    //   resultarray: result,});
+
+    // console.log(qnapairs);
 
     //put the Q&A pairs into a db
-    
+  }
 
-    await this.callFunctionWithErrorHandling("todo", "post", {
-      description: result[0].substring(0, 10),
-      isCompleted: false,
-      channelOrChatId: this.channelOrChatId
+
+  qnaextraction = async () => {
+
+    const client = new OpenAIClient(
+      "https://yammer-southus.openai.azure.com/",
+      new AzureKeyCredential("1d635b5d42074364982685ae5afde51c")
+    );
+
+    const textToSummarize = `
+  I added a tab at the top of this channel. Check it out!<attachment id="tab::b2f82ee4-7308-4bc1-948a-1023469e9dab"></attachment>.I added a tab at the top of this channel. Check it out!<attachment id="tab::cf0ba183-a8e5-4911-9a82-5cca269537fe"></attachment>first replysecond replythird reply,,,.I added a tab at the top of this channel. Check it out!<attachment id="tab::1dafcda6-c02a-4707-92d4-303bd4f23ec3"></attachment>.I added a tab at the top of this channel. Check it out!<attachment id="tab::57cb0845-8aad-4389-bb69-5e822aa852a3"></attachment>.I added a tab at the top of this channel. Check it out!<attachment id="tab::cbb4fc4c-a4f6-4d04-8e49-10b5f7ace4ff"></attachment>.I added a tab at the top of this channel. Check it out!<attachment id="tab::6bef4315-97ee-47d8-b196-5d448506f2e0"></attachment>.what is the weather today?it's warm,
+:`;
+
+    const summarizationPrompt = [`
+If there are no questions in the text, just return an empty JSON object. Create Q&A pairs from the following text, with this JSON output:
+'{
+  "0":
+  {
+      "Q": question text,
+      "A": answer text
+  },
+  "1":
+  {
+      "Q": question text,
+      "A": answer text
+  }
+}'
+Do not include anything else in the output. Only include the response in that JSON format and nothing else. Don't describe the text, just provide only what's stated here. If there are no questions in the text, just return an empty JSON object.
+Text:
+""""""
+${textToSummarize}
+""""""
+
+Summary:
+`];
+
+    //console.log(`Input: ${summarizationPrompt}`);
+
+    const deploymentName = "text-davinci-003";
+
+    const { choices } = await client.getCompletions(deploymentName, summarizationPrompt, {
+      maxTokens: 1000
     });
-    this.refresh();
-}
+    const completion = choices[0].text;
+    console.log(completion);
+    const json_completion = JSON.parse(completion);
+    console.log(json_completion);
+
+    const pairsArray = [];
+    for (const key in json_completion) {
+      let value = json_completion[key].A;
+      let replacedAnswer = value.includes("attachment") || value.includes("'") ? "There is an attachment" : value;
+      console.log(replacedAnswer);
+
+      let question = json_completion[key].Q;
+      let replacedQuestion = question.includes("attachment") || question.includes("'") ? "There is an attachment" : question;
+      console.log(replacedQuestion);
+
+      const pair = {
+        Q: replacedQuestion,
+        A: replacedAnswer
+      };
+      pairsArray.push(pair);
+    }
+
+    return pairsArray;
+  }
 
   async refresh() {
     await this.getItems();
@@ -269,15 +379,6 @@ class Tab extends React.Component {
   render() {
     const items = this.state.items?.map((item, index) => (
       <div key={index} className="item">
-        <div className="complete">
-          <Checkbox
-            checked={this.state.items[index].isCompleted}
-            onChange={(e, { checked }) =>
-              this.onCompletionStatusChange(item.id, index, checked)
-            }
-            className="is-completed-input"
-          />
-        </div>
         <div className="description">
           <Input
             value={this.state.items[index].description}
@@ -331,7 +432,7 @@ class Tab extends React.Component {
               <div className="todo">
                 <div className="header">
                   <div className="title">
-                    <h2>To Do List</h2>
+                    <h2>FAQ</h2>
                     <span>
                       {this.state.items.length} item
                       {this.state.items.length === 1 ? "" : "s"}
@@ -361,7 +462,7 @@ class Tab extends React.Component {
                   <div className="header-container">
                     <div className="note">
                       <Notepad20Regular />
-                      <span>Note</span>
+                      <span>Q&A Pair</span>
                     </div>
                     <div className="created-by">
                       <ContactCard20Regular />
