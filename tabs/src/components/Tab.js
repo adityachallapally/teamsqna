@@ -4,6 +4,7 @@
 import React from "react";
 import "./App.css";
 import "./Tab.css";
+import { createMicrosoftGraphClientWithCredential } from "@microsoft/teamsfx";
 import {
   BearerTokenAuthProvider,
   createApiClient,
@@ -243,11 +244,11 @@ class Tab extends React.Component {
 
   handleClick = async () => {
     console.log('clicked');
-    await this.callFunctionWithErrorHandling("todo", "post", {
-        description: "test",
-        isCompleted: false,
-        channelOrChatId: this.channelOrChatId,
-    });
+    // await this.callFunctionWithErrorHandling("todo", "post", {
+    //     description: "test",
+    //     isCompleted: false,
+    //     channelOrChatId: this.channelOrChatId,
+    // });
     this.refresh();
 }
 
@@ -342,7 +343,7 @@ class Tab extends React.Component {
                       appearance="primary"
                       onClick={() => this.setState({ isAddingItem: true })}
                     >
-                      + Add task2
+                      + Add task3
                     </Button>
                   </div>
                 </div>
