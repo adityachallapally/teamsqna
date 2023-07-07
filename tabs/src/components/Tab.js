@@ -331,7 +331,7 @@ If there are no questions in the text, just return an empty JSON object. Create 
       "A": answer text
   }
 }'
-Do not include anything else in the output. Only include the response in that JSON format and nothing else. Don't describe the text, just provide only what's stated here. If there are no questions in the text, just return an empty JSON object.
+Do not include anything else in the output. Only include the response in that JSON format and nothing else. Don't describe the text, just provide only what's stated here. If there are no questions in the text, just return an empty JSON object. Always return at least a question.
 Text:
 """"""
 ${textToSummarize}
